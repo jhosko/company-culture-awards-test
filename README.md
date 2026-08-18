@@ -1,5 +1,14 @@
 # DBusiness Company Culture Awards
 
-Upload this project to Vercel to create a test site.
+Version 2 front end.
 
-Then replace the index page with the full build.
+Pages:
+Home
+Vote
+About the Awards
+Timeline
+
+The ballot is interactive but submissions are not yet stored.
+
+Next phase:
+Connect Supabase and build the private admin review dashboard.
