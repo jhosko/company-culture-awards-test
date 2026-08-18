@@ -1,0 +1,36 @@
+
+/* V4.1 brand corrections */
+.dbusiness {
+  color: var(--navy) !important;
+}
+.footerBrand {
+  color: #fff !important;
+}
+.miniMasthead {
+  color: var(--navy);
+}
+.miniTag {
+  margin-top: 3px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: #222;
+}
+.brandPanel {
+  background: #f4f5f6;
+  border-bottom: 9px solid var(--navy);
+}
+.companyWord {
+  color: #111;
+}
+.cultureWord {
+  color: var(--navy);
+}
+.awardsWord,
+.brandRule b {
+  color: var(--gold);
+}
+.brandRule span {
+  background: var(--gold);
+}

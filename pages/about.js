@@ -29,33 +29,44 @@ export default function About() {
             </a>
           </p>
 
-          <h2>How the awards work</h2>
+          <h2>Methodology</h2>
           <p>
-            Employees identify their company, select the areas where it stands out,
-            provide an overall culture score, and share what they value most about
-            working there.
-          </p>
-
-          <h2>How results are reviewed</h2>
-          <p>
-            Submissions are reviewed for authenticity and results are evaluated across
-            company sizes, industries, and award categories.
+            The DBusiness Company Culture Awards are based on feedback submitted directly
+            by employees. Participants identify their company, select the areas where it
+            stands out, provide an overall culture score, and share what they value most
+            about working there.
           </p>
           <p>
-            DBusiness reserves the right to validate submissions and remove duplicate
-            or questionable entries to preserve the integrity of the awards.
+            To help ensure the integrity of the program, participants must submit a valid
+            company email address and verify their submission before it is included in the
+            results. Personal email addresses and shared company inboxes are not accepted.
+          </p>
+          <p>
+            Results are reviewed across company sizes and award categories. Companies must
+            receive sufficient verified employee participation to qualify for recognition.
+            DBusiness may combine company size divisions or withhold an award when
+            participation does not support a meaningful result.
+          </p>
+          <p>
+            DBusiness also reviews submissions for duplicate, unverifiable, or questionable
+            activity and reserves the right to exclude entries when necessary to preserve
+            the credibility of the awards.
           </p>
 
           <h2>Who can participate?</h2>
           <p>
-            Employees of companies operating in Metro Detroit may participate. A
-            company email address is required for validation.
+            Employees of companies operating in Metro Detroit may participate. A company
+            email address is required for validation.
           </p>
 
           <div className="eventBox">
-            <div className="eyebrow gold">Awards Breakfast</div>
-            <h2>Celebrate the honorees with DBusiness.</h2>
-            <p>The DBusiness Company Culture Awards Breakfast will take place in early March 2027.</p>
+            <div>
+              <div className="eyebrow gold">Awards Breakfast</div>
+              <h2>Celebrate the honorees with DBusiness.</h2>
+              <p>
+                The DBusiness Company Culture Awards Breakfast will take place in early March 2027.
+              </p>
+            </div>
             <div className="ticketSoon large">Tickets on sale in January</div>
           </div>
         </div>

@@ -6,7 +6,7 @@ const nav = [
   ["/", "Home"],
   ["/vote", "Vote"],
   ["/about", "About the Awards"],
-  ["/timeline", "Timeline"],
+  ["/timeline", "Timeline"]
 ];
 
 export default function Layout({ children }) {
@@ -24,8 +24,8 @@ export default function Layout({ children }) {
           <nav className="nav">
             {nav.map(([href, label]) => (
               <Link
-                href={href}
                 key={href}
+                href={href}
                 className={router.pathname === href ? "navLink active" : "navLink"}
               >
                 {label}
@@ -36,7 +36,9 @@ export default function Layout({ children }) {
             </a>
           </nav>
 
-          <Link href="/vote" className="button buttonSmall">Vote Now</Link>
+          <Link href="/vote" className="button buttonSmall">
+            Vote Now
+          </Link>
         </div>
       </header>
 
@@ -47,7 +49,9 @@ export default function Layout({ children }) {
           <div>
             <div className="dbusiness footerBrand">DBusiness</div>
             <div className="footerTitle">Company Culture Awards</div>
-            <p className="footerCopy">Recognizing standout workplace cultures across Metro Detroit.</p>
+            <p className="footerCopy">
+              Recognizing standout workplace cultures across Metro Detroit.
+            </p>
           </div>
 
           <div>
