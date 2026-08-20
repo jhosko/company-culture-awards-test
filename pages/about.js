@@ -42,10 +42,10 @@ export default function About() {
             results. Personal email addresses and shared company inboxes are not accepted.
           </p>
           <p>
-            Results are reviewed across company sizes and award categories. Companies must
-            receive sufficient verified employee participation to qualify for recognition.
-            DBusiness may combine company size divisions or withhold an award when
-            participation does not support a meaningful result.
+            Results are reviewed across company sizes, industries, and award categories.
+            Companies must receive sufficient verified employee participation to qualify
+            for recognition. DBusiness may combine company size divisions or withhold an
+            award when participation does not support a meaningful result.
           </p>
           <p>
             DBusiness also reviews submissions for duplicate, unverifiable, or questionable
@@ -53,10 +53,21 @@ export default function About() {
             the credibility of the awards.
           </p>
 
+          <h2>Company size divisions</h2>
+          <p>
+            Eligible companies must have at least 10 employees. Companies are grouped into
+            three size divisions:
+          </p>
+          <p>
+            <strong>Small:</strong> 10 to 49 employees<br />
+            <strong>Medium:</strong> 50 to 249 employees<br />
+            <strong>Large:</strong> 250 or more employees
+          </p>
+
           <h2>Who can participate?</h2>
           <p>
-            Employees of companies operating in Metro Detroit may participate. A company
-            email address is required for validation.
+            Employees of companies operating in Metro Detroit with at least 10 employees
+            may participate. A company email address is required for verification.
           </p>
 
           <div className="eventBox">
