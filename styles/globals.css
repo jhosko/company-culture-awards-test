@@ -16,3 +16,114 @@
 .eventBox p{color:#d7e0e7}
 @media(max-width:900px){.footerGrid{grid-template-columns:1fr 1fr}}
 @media(max-width:650px){.footerGrid{grid-template-columns:1fr}}
+
+/* Admin reporting proof of concept */
+.adminLoginBox {
+  max-width: 520px;
+  background: #fff;
+  border: 1px solid #ddd8cf;
+  padding: 28px;
+}
+
+.adminLoginBox label {
+  display: block;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.adminLoginBox input {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid #b8b8b8;
+  margin-bottom: 14px;
+}
+
+.adminError {
+  margin-top: 14px;
+  color: #9f171d;
+  font-weight: 700;
+}
+
+.adminMetrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.adminMetricCard {
+  background: #fff;
+  border-top: 5px solid var(--navy);
+  padding: 22px;
+}
+
+.adminMetricCard span {
+  display: block;
+  color: #666;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.adminMetricCard strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 36px;
+  color: var(--navy);
+}
+
+.adminActions {
+  margin-bottom: 30px;
+}
+
+.adminSection {
+  margin-top: 38px;
+}
+
+.adminSection h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 34px;
+  margin-bottom: 16px;
+}
+
+.adminTableWrap {
+  overflow-x: auto;
+  background: #fff;
+  border: 1px solid #ddd8cf;
+}
+
+.adminTable {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 980px;
+}
+
+.adminTable th,
+.adminTable td {
+  padding: 13px 14px;
+  border-bottom: 1px solid #e9e5df;
+  text-align: left;
+  vertical-align: top;
+  font-size: 13px;
+}
+
+.adminTable th {
+  background: #f2f4f5;
+  color: var(--navyDark);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+}
+
+@media (max-width: 900px) {
+  .adminMetrics {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .adminMetrics {
+    grid-template-columns: 1fr;
+  }
+}
