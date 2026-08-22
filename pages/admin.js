@@ -93,6 +93,13 @@ function downloadCsv(rows) {
   URL.revokeObjectURL(url);
 }
 
+function safeFileName(name) {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9.]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 function ContentField({ item, value, onChange }) {
   const common = {
     value: value ?? "",
@@ -139,6 +146,8 @@ export default function Admin() {
   const [sponsors, setSponsors] = useState([]);
   const [sponsorDraft, setSponsorDraft] = useState(blankSponsor);
   const [editingSponsorId, setEditingSponsorId] = useState("");
+  const [logoFile, setLogoFile] = useState(null);
+  const [logoPreview, setLogoPreview] = useState("");
   const [activeView, setActiveView] = useState("reporting");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -278,6 +287,53 @@ export default function Admin() {
     }
   }
 
+  async function uploadLogo(file) {
+    if (!file) return sponsorDraft.logo_url;
+
+    if (!["image/png", "image/jpeg", "image/webp", "image/svg+xml"].includes(file.type)) {
+      throw new Error("Please upload a PNG, JPG, WebP, or SVG logo.");
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      throw new Error("Logo files must be smaller than 5 MB.");
+    }
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    const ext = file.name.includes(".")
+      ? file.name.substring(file.name.lastIndexOf(".")).toLowerCase()
+      : "";
+
+    const sponsorSlug = safeFileName(sponsorDraft.name || "sponsor")
+      .replace(/\.(png|jpg|jpeg|webp|svg)$/i, "");
+
+    const fileName = `${sponsorSlug}-${Date.now()}${ext}`;
+    const objectPath = `logos/${fileName}`;
+
+    const response = await fetch(
+      `${supabaseUrl}/storage/v1/object/sponsor-logos/${objectPath}`,
+      {
+        method: "POST",
+        headers: {
+          apikey: anonKey,
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": file.type,
+          "x-upsert": "false"
+        },
+        body: file
+      }
+    );
+
+    if (!response.ok) {
+      const result = await response.text();
+      console.error("Logo upload failed:", result);
+      throw new Error("Could not upload the sponsor logo.");
+    }
+
+    return `${supabaseUrl}/storage/v1/object/public/sponsor-logos/${objectPath}`;
+  }
+
   async function saveSponsor(e) {
     e.preventDefault();
     setSaving(true);
@@ -285,11 +341,26 @@ export default function Admin() {
     setError("");
 
     try {
+      if (!sponsorDraft.name.trim()) {
+        throw new Error("Sponsor name is required.");
+      }
+
+      let logoUrl = sponsorDraft.logo_url;
+
+      if (logoFile) {
+        logoUrl = await uploadLogo(logoFile);
+      }
+
+      if (!logoUrl) {
+        throw new Error("Please upload a sponsor logo.");
+      }
+
       await api("/api/admin/sponsors", {
         method: editingSponsorId ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...sponsorDraft,
+          logo_url: logoUrl,
           ...(editingSponsorId ? { id: editingSponsorId } : {})
         })
       });
@@ -297,9 +368,11 @@ export default function Admin() {
       await loadSponsors(accessToken);
       setSponsorDraft(blankSponsor);
       setEditingSponsorId("");
+      setLogoFile(null);
+      setLogoPreview("");
       setMessage(editingSponsorId ? "Sponsor updated." : "Sponsor added.");
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Could not save sponsor.");
     } finally {
       setSaving(false);
     }
@@ -335,7 +408,26 @@ export default function Admin() {
       display_order: sponsor.display_order || 100,
       active: sponsor.active !== false
     });
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setLogoFile(null);
+    setLogoPreview(sponsor.logo_url || "");
+  }
+
+  function cancelSponsorEdit() {
+    setEditingSponsorId("");
+    setSponsorDraft(blankSponsor);
+    setLogoFile(null);
+    setLogoPreview("");
+  }
+
+  function selectLogoFile(file) {
+    setLogoFile(file || null);
+
+    if (!file) {
+      setLogoPreview(editingSponsorId ? sponsorDraft.logo_url : "");
+      return;
+    }
+
+    setLogoPreview(URL.createObjectURL(file));
   }
 
   function signOut() {
@@ -443,12 +535,46 @@ export default function Admin() {
           )}
 
           {activeView === "sponsors" && (
-            <section className="cmsPanel">
+            <section className="cmsPanel sponsorCms">
               <div className="cmsIntro">
                 <div>
                   <div className="eyebrow">CMS</div>
                   <h2>Sponsors</h2>
-                  <p>Add, remove, reorder, or temporarily hide sponsor logos.</p>
+                  <p>Add, edit, hide, reorder, or remove sponsors.</p>
+                </div>
+              </div>
+
+              <div className="existingSponsorsHeader">
+                <h3>Existing Sponsors</h3>
+                <span>{sponsors.length} sponsor{sponsors.length === 1 ? "" : "s"}</span>
+              </div>
+
+              <div className="sponsorAdminList sponsorAdminListFirst">
+                {sponsors.map(sponsor => (
+                  <article className="sponsorAdminCard" key={sponsor.id}>
+                    <div className="sponsorAdminLogo">
+                      <img src={sponsor.logo_url} alt={sponsor.name} />
+                    </div>
+                    <div className="sponsorAdminInfo">
+                      <strong>{sponsor.name}</strong>
+                      <span>{sponsor.sponsor_tier || "Sponsor"}</span>
+                      <span>Display order: {sponsor.display_order}</span>
+                      <span className={sponsor.active ? "sponsorVisible" : "sponsorHidden"}>
+                        {sponsor.active ? "Visible on site" : "Hidden from site"}
+                      </span>
+                    </div>
+                    <div className="sponsorAdminActions">
+                      <button type="button" onClick={() => editSponsor(sponsor)}>Edit</button>
+                      <button type="button" onClick={() => deleteSponsor(sponsor.id)}>Remove</button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+
+              <div className="sponsorFormDivider">
+                <div>
+                  <h3>{editingSponsorId ? "Edit Sponsor" : "Add Sponsor"}</h3>
+                  <p>Upload a logo from your computer. PNG, JPG, WebP, and SVG files up to 5 MB are accepted.</p>
                 </div>
               </div>
 
@@ -462,21 +588,34 @@ export default function Admin() {
                 </div>
 
                 <div className="cmsField">
-                  <label>Logo URL</label>
-                  <input
-                    type="url"
-                    value={sponsorDraft.logo_url}
-                    onChange={e => setSponsorDraft({...sponsorDraft, logo_url: e.target.value})}
-                  />
-                </div>
-
-                <div className="cmsField">
                   <label>Website URL</label>
                   <input
                     type="url"
                     value={sponsorDraft.website_url}
                     onChange={e => setSponsorDraft({...sponsorDraft, website_url: e.target.value})}
+                    placeholder="https://..."
                   />
+                </div>
+
+                <div className="cmsField sponsorUploadField">
+                  <label>Logo</label>
+                  <div className="sponsorUploadBox">
+                    <input
+                      type="file"
+                      accept=".png,.jpg,.jpeg,.webp,.svg,image/png,image/jpeg,image/webp,image/svg+xml"
+                      onChange={e => selectLogoFile(e.target.files?.[0] || null)}
+                    />
+                    {logoPreview ? (
+                      <div className="sponsorUploadPreview">
+                        <img src={logoPreview} alt="Sponsor logo preview" />
+                      </div>
+                    ) : (
+                      <div className="sponsorUploadEmpty">No logo selected</div>
+                    )}
+                  </div>
+                  {editingSponsorId && !logoFile ? (
+                    <small>Leave this unchanged to keep the current logo.</small>
+                  ) : null}
                 </div>
 
                 <div className="cmsField">
@@ -494,6 +633,7 @@ export default function Admin() {
                     value={sponsorDraft.display_order}
                     onChange={e => setSponsorDraft({...sponsorDraft, display_order: Number(e.target.value)})}
                   />
+                  <small>Lower numbers appear first.</small>
                 </div>
 
                 <div className="cmsField sponsorActiveField">
@@ -509,42 +649,19 @@ export default function Admin() {
 
                 <div className="sponsorEditorActions">
                   <button className="button" type="submit" disabled={saving}>
-                    {editingSponsorId ? "Update Sponsor" : "Add Sponsor"}
+                    {saving ? "Saving..." : editingSponsorId ? "Update Sponsor" : "Add Sponsor"}
                   </button>
                   {editingSponsorId && (
                     <button
                       type="button"
                       className="button sponsorSecondaryButton"
-                      onClick={() => {
-                        setEditingSponsorId("");
-                        setSponsorDraft(blankSponsor);
-                      }}
+                      onClick={cancelSponsorEdit}
                     >
                       Cancel
                     </button>
                   )}
                 </div>
               </form>
-
-              <div className="sponsorAdminList">
-                {sponsors.map(sponsor => (
-                  <article className="sponsorAdminCard" key={sponsor.id}>
-                    <div className="sponsorAdminLogo">
-                      <img src={sponsor.logo_url} alt={sponsor.name} />
-                    </div>
-                    <div className="sponsorAdminInfo">
-                      <strong>{sponsor.name}</strong>
-                      <span>{sponsor.sponsor_tier}</span>
-                      <span>Order {sponsor.display_order}</span>
-                      <span>{sponsor.active ? "Visible" : "Hidden"}</span>
-                    </div>
-                    <div className="sponsorAdminActions">
-                      <button onClick={() => editSponsor(sponsor)}>Edit</button>
-                      <button onClick={() => deleteSponsor(sponsor.id)}>Remove</button>
-                    </div>
-                  </article>
-                ))}
-              </div>
             </section>
           )}
 
