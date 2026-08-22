@@ -451,6 +451,14 @@ export default function Admin() {
     setLogoFile(null);
     setLogoPreview(sponsor.logo_url || "");
     setActiveView("sponsors");
+    setMessage(`Editing ${sponsor.name}`);
+
+    setTimeout(() => {
+      const editor = document.getElementById("sponsor-editor-form");
+      if (editor) {
+        editor.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 50);
   }
 
   function cancelSponsorEdit() {
@@ -645,14 +653,14 @@ export default function Admin() {
 
               <div className="sponsorFormDivider">
                 <div>
-                  <h3>{editingSponsorId ? "Edit Sponsor" : "Add Sponsor"}</h3>
+                  <h3>{editingSponsorId ? `Edit Sponsor: ${sponsorDraft.name}` : "Add Sponsor"}</h3>
                   <p>
                     Upload a logo from your computer. PNG, JPG, WebP, and SVG files up to 5 MB are accepted.
                   </p>
                 </div>
               </div>
 
-              <form className="sponsorEditor" onSubmit={saveSponsor}>
+              <form id="sponsor-editor-form" className="sponsorEditor" onSubmit={saveSponsor}>
                 <div className="cmsField">
                   <label>Sponsor name</label>
                   <input
