@@ -572,3 +572,104 @@ a.sponsorLogoItem:hover img {
     max-height: 64px;
   }
 }
+/* Sponsor CMS upload refinement */
+.sponsorCms .cmsIntro {
+  margin-bottom: 22px;
+}
+
+.existingSponsorsHeader,
+.sponsorFormDivider {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 20px;
+}
+
+.existingSponsorsHeader {
+  margin-bottom: 14px;
+}
+
+.existingSponsorsHeader h3,
+.sponsorFormDivider h3 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 28px;
+}
+
+.existingSponsorsHeader span {
+  color: #777;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.sponsorAdminListFirst {
+  margin-bottom: 36px;
+}
+
+.sponsorFormDivider {
+  padding-top: 28px;
+  border-top: 1px solid #e5e0d8;
+  margin-bottom: 18px;
+}
+
+.sponsorFormDivider p {
+  margin: 7px 0 0;
+  color: #777;
+}
+
+.sponsorUploadField {
+  grid-row: span 2;
+}
+
+.sponsorUploadBox {
+  border: 1px dashed #aaa;
+  background: #fff;
+  padding: 14px;
+}
+
+.sponsorUploadBox input[type="file"] {
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.sponsorUploadPreview,
+.sponsorUploadEmpty {
+  margin-top: 14px;
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f3ef;
+  border: 1px solid #e3ded6;
+}
+
+.sponsorUploadPreview img {
+  display: block;
+  max-width: 240px;
+  max-height: 110px;
+  object-fit: contain;
+}
+
+.sponsorUploadEmpty {
+  color: #999;
+  font-size: 13px;
+}
+
+.sponsorVisible {
+  color: #2e6a39 !important;
+  font-weight: 700;
+}
+
+.sponsorHidden {
+  color: #9a4e4e !important;
+  font-weight: 700;
+}
+
+@media (max-width: 700px) {
+  .existingSponsorsHeader,
+  .sponsorFormDivider {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
