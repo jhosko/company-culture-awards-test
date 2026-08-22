@@ -208,3 +208,131 @@
     padding: 18px;
   }
 }
+/* CMS admin */
+.adminHeader .container {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 30px;
+}
+
+.adminWorkspace { padding-top: 40px; }
+
+.adminTabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 30px;
+  border-bottom: 1px solid #d7d1c8;
+}
+
+.adminTab {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 14px 18px;
+  font-weight: 800;
+  color: #666;
+  cursor: pointer;
+  border-bottom: 4px solid transparent;
+}
+
+.adminTab.active {
+  color: var(--navy);
+  border-bottom-color: var(--gold);
+}
+
+.adminGlobalError { margin-bottom: 20px; }
+
+.cmsPanel {
+  background: #fff;
+  border: 1px solid #ddd8cf;
+  padding: 30px;
+}
+
+.cmsIntro {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 28px;
+  padding-bottom: 24px;
+  margin-bottom: 28px;
+  border-bottom: 1px solid #e5e0d8;
+}
+
+.cmsIntro h2 {
+  margin: 0 0 8px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 38px;
+}
+
+.cmsIntro p {
+  margin: 0;
+  color: #666;
+  line-height: 1.6;
+  max-width: 700px;
+}
+
+.cmsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.cmsField {
+  border: 1px solid #ddd8cf;
+  padding: 20px;
+  background: #faf9f7;
+}
+
+.cmsField label {
+  display: block;
+  font-weight: 800;
+  margin-bottom: 5px;
+}
+
+.cmsField small {
+  display: block;
+  color: #777;
+  line-height: 1.45;
+  margin-bottom: 12px;
+}
+
+.cmsField input,
+.cmsField textarea,
+.cmsField select {
+  width: 100%;
+  border: 1px solid #b8b8b8;
+  background: #fff;
+  padding: 13px;
+  color: #111;
+}
+
+.cmsField textarea { resize: vertical; }
+
+.cmsKey {
+  margin-top: 9px;
+  color: #999;
+  font-family: monospace;
+  font-size: 10px;
+}
+
+.cmsSuccess {
+  margin-bottom: 22px;
+  padding: 14px 16px;
+  background: #eef6ef;
+  border: 1px solid #9db9a0;
+  color: #28572d;
+  font-weight: 700;
+}
+
+@media (max-width: 800px) {
+  .adminHeader .container,
+  .cmsIntro {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .cmsGrid {
+    grid-template-columns: 1fr;
+  }
+}
