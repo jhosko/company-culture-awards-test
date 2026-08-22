@@ -12,14 +12,11 @@ function formatDate(dateString) {
   });
 }
 
-export default function Home({ cms }) {
-  const headline = cms.homepage_headline || "Do you love where you work?";
-  const intro =
-    cms.homepage_intro ||
-    "Tell us what makes your company a great place to work and help it earn recognition in the DBusiness Company Culture Awards.";
+export default function Home({ cms, sponsors }) {
+  const value = (key, fallback) => cms[key] || fallback;
 
-  const votingOpen = formatDate(cms.voting_open_date || "2026-10-01");
-  const votingClose = formatDate(cms.voting_close_date || "2026-11-10");
+  const votingOpen = formatDate(value("voting_open_date", "2026-10-01"));
+  const votingClose = formatDate(value("voting_close_date", "2026-11-10"));
 
   return (
     <Layout>
@@ -27,8 +24,13 @@ export default function Home({ cms }) {
         <div className="container heroGrid">
           <div className="heroCopy">
             <div className="eyebrow">DBusiness Company Culture Awards</div>
-            <h1>{headline}</h1>
-            <p className="heroLead">{intro}</p>
+            <h1>{value("homepage_headline", "Do you love where you work?")}</h1>
+            <p className="heroLead">
+              {value(
+                "homepage_intro",
+                "Tell us what makes your company a great place to work and help it earn recognition in the DBusiness Company Culture Awards."
+              )}
+            </p>
 
             <div className="heroActions">
               <Link href="/vote" className="button buttonLarge">Vote Now</Link>
@@ -51,30 +53,93 @@ export default function Home({ cms }) {
         </div>
       </section>
 
+      {sponsors.length > 0 && (
+        <section className="sponsorStrip">
+          <div className="container">
+            <div className="sponsorStripHeading">
+              {value("sponsor_heading", "Thank You to Our Sponsors")}
+            </div>
+
+            <div className="sponsorLogoRow">
+              {sponsors.map(sponsor => {
+                const logo = (
+                  <img
+                    src={sponsor.logo_url}
+                    alt={sponsor.name}
+                    loading="lazy"
+                  />
+                );
+
+                return sponsor.website_url ? (
+                  <a
+                    key={sponsor.id}
+                    href={sponsor.website_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="sponsorLogoItem"
+                    title={sponsor.name}
+                  >
+                    {logo}
+                  </a>
+                ) : (
+                  <div
+                    key={sponsor.id}
+                    className="sponsorLogoItem"
+                    title={sponsor.name}
+                  >
+                    {logo}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
       <section className="section">
         <div className="container">
           <div className="sectionIntro">
             <div className="eyebrow">How it works</div>
-            <h2>Three quick ways to tell us about your workplace.</h2>
+            <h2>
+              {value(
+                "how_it_works_heading",
+                "Three quick ways to tell us about your workplace."
+              )}
+            </h2>
           </div>
 
           <div className="stepsGrid">
             <article className="stepCard">
               <div className="stepNumber">01</div>
-              <h3>Choose what your company does best.</h3>
-              <p>Select the culture categories where your company truly stands out.</p>
+              <h3>{value("step_1_title", "Choose what your company does best.")}</h3>
+              <p>
+                {value(
+                  "step_1_body",
+                  "Select the culture categories where your company truly stands out."
+                )}
+              </p>
             </article>
 
             <article className="stepCard">
               <div className="stepNumber">02</div>
-              <h3>Rate your company culture.</h3>
-              <p>Give your overall workplace culture a score from 1 to 100.</p>
+              <h3>{value("step_2_title", "Rate your company culture.")}</h3>
+              <p>
+                {value(
+                  "step_2_body",
+                  "Give your overall workplace culture a score from 1 to 100."
+                )}
+              </p>
             </article>
 
             <article className="stepCard">
               <div className="stepNumber">03</div>
-              <h3>Tell us why.</h3>
-              <p>Share what you love most about working there.</p>
+              <h3>{value("step_3_title", "Tell us why.")}</h3>
+              <p>
+                {value(
+                  "step_3_body",
+                  "Share what you love most about working there."
+                )}
+              </p>
             </article>
           </div>
         </div>
@@ -84,10 +149,12 @@ export default function Home({ cms }) {
         <div className="container">
           <div className="sectionIntro light">
             <div className="eyebrow gold">Award categories</div>
-            <h2>What makes a great culture?</h2>
+            <h2>{value("categories_heading", "What makes a great culture?")}</h2>
             <p>
-              Employees can recognize the areas where their company delivers an
-              exceptional workplace experience.
+              {value(
+                "categories_intro",
+                "Employees can recognize the areas where their company delivers an exceptional workplace experience."
+              )}
             </p>
           </div>
 
@@ -105,6 +172,27 @@ export default function Home({ cms }) {
           </div>
         </div>
       </section>
+
+      <section className="section">
+        <div className="container recognitionCallout">
+          <div>
+            <div className="eyebrow">Recognition that travels</div>
+            <h2>
+              {value(
+                "recognition_heading",
+                "Featured in print, online, and celebrated live."
+              )}
+            </h2>
+            <p>
+              {value(
+                "recognition_body",
+                "Award recipients will be featured in DBusiness magazine, recognized on DBusiness.com, and celebrated at the DBusiness Company Culture Awards Breakfast."
+              )}
+            </p>
+          </div>
+          <Link href="/about" className="button buttonNavy">Learn More</Link>
+        </div>
+      </section>
     </Layout>
   );
 }
@@ -113,42 +201,46 @@ export async function getServerSideProps() {
   const supabaseUrl = process.env.SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  const fallback = {
-    homepage_headline: "Do you love where you work?",
-    homepage_intro:
-      "Tell us what makes your company a great place to work and help it earn recognition in the DBusiness Company Culture Awards.",
-    voting_open_date: "2026-10-01",
-    voting_close_date: "2026-11-10"
-  };
+  const fallbackCms = {};
 
   if (!supabaseUrl || !serviceRoleKey) {
-    return { props: { cms: fallback } };
+    return { props: { cms: fallbackCms, sponsors: [] } };
   }
 
   try {
-    const response = await fetch(
-      `${supabaseUrl}/rest/v1/site_content?select=content_key,content_value`,
-      {
-        headers: {
-          apikey: serviceRoleKey,
-          Authorization: `Bearer ${serviceRoleKey}`
-        }
-      }
-    );
+    const headers = {
+      apikey: serviceRoleKey,
+      Authorization: `Bearer ${serviceRoleKey}`
+    };
 
-    const rows = await response.json();
+    const [contentResponse, sponsorsResponse] = await Promise.all([
+      fetch(
+        `${supabaseUrl}/rest/v1/site_content?select=content_key,content_value`,
+        { headers }
+      ),
+      fetch(
+        `${supabaseUrl}/rest/v1/sponsors?select=id,name,logo_url,website_url,sponsor_tier,display_order&active=eq.true&order=display_order.asc`,
+        { headers }
+      )
+    ]);
 
-    if (!response.ok || !Array.isArray(rows)) {
-      return { props: { cms: fallback } };
+    const contentRows = await contentResponse.json();
+    const sponsorRows = await sponsorsResponse.json();
+
+    const cms = {};
+    if (contentResponse.ok && Array.isArray(contentRows)) {
+      contentRows.forEach(row => {
+        if (row?.content_key) cms[row.content_key] = row.content_value || "";
+      });
     }
 
-    const cms = { ...fallback };
-    rows.forEach(row => {
-      if (row?.content_key) cms[row.content_key] = row.content_value || "";
-    });
-
-    return { props: { cms } };
+    return {
+      props: {
+        cms,
+        sponsors: sponsorsResponse.ok && Array.isArray(sponsorRows) ? sponsorRows : []
+      }
+    };
   } catch {
-    return { props: { cms: fallback } };
+    return { props: { cms: fallbackCms, sponsors: [] } };
   }
 }

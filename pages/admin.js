@@ -7,6 +7,15 @@ const categoryWeight = {
   third_category: 1
 };
 
+const blankSponsor = {
+  name: "",
+  logo_url: "",
+  website_url: "",
+  sponsor_tier: "Sponsor",
+  display_order: 100,
+  active: true
+};
+
 function calculateCompanySummary(ballots) {
   const map = new Map();
 
@@ -55,7 +64,6 @@ function calculateCompanySummary(ballots) {
       average_culture_score: company.ballots
         ? Math.round((company.score_sum / company.ballots) * 10) / 10
         : 0,
-      possible_category_points: possiblePoints,
       category_percentages
     };
   });
@@ -128,11 +136,14 @@ export default function Admin() {
   const [ballots, setBallots] = useState([]);
   const [contentItems, setContentItems] = useState([]);
   const [contentValues, setContentValues] = useState({});
+  const [sponsors, setSponsors] = useState([]);
+  const [sponsorDraft, setSponsorDraft] = useState(blankSponsor);
+  const [editingSponsorId, setEditingSponsorId] = useState("");
   const [activeView, setActiveView] = useState("reporting");
   const [error, setError] = useState("");
-  const [cmsMessage, setCmsMessage] = useState("");
+  const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const [savingContent, setSavingContent] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const verifiedBallots = useMemo(
     () => ballots.filter(b => b.verification_status === "verified" && b.review_status !== "excluded"),
@@ -149,15 +160,26 @@ export default function Admin() {
     [verifiedBallots]
   );
 
+  async function api(path, options = {}) {
+    const response = await fetch(path, {
+      ...options,
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        ...(options.headers || {})
+      }
+    });
+
+    const result = await response.json();
+    if (!response.ok) throw new Error(result?.error || "Request failed.");
+    return result;
+  }
+
   async function loadReporting(token) {
     const response = await fetch("/api/admin/reporting", {
       headers: { Authorization: `Bearer ${token}` }
     });
-
     const result = await response.json();
-
     if (!response.ok) throw new Error(result?.error || "Could not load reporting.");
-
     setBallots(result.ballots || []);
     setAdminEmail(result.admin?.email || "");
   }
@@ -166,9 +188,7 @@ export default function Admin() {
     const response = await fetch("/api/admin/content", {
       headers: { Authorization: `Bearer ${token}` }
     });
-
     const result = await response.json();
-
     if (!response.ok) throw new Error(result?.error || "Could not load site content.");
 
     const items = result.content || [];
@@ -181,6 +201,15 @@ export default function Admin() {
     setContentValues(values);
   }
 
+  async function loadSponsors(token) {
+    const response = await fetch("/api/admin/sponsors", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result?.error || "Could not load sponsors.");
+    setSponsors(result.sponsors || []);
+  }
+
   async function signIn(e) {
     e.preventDefault();
     setLoading(true);
@@ -189,8 +218,6 @@ export default function Admin() {
     try {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-      if (!supabaseUrl || !anonKey) throw new Error("Admin login is not configured.");
 
       const response = await fetch(
         `${supabaseUrl}/auth/v1/token?grant_type=password`,
@@ -212,7 +239,8 @@ export default function Admin() {
 
       await Promise.all([
         loadReporting(result.access_token),
-        loadContent(result.access_token)
+        loadContent(result.access_token),
+        loadSponsors(result.access_token)
       ]);
 
       setAccessToken(result.access_token);
@@ -225,8 +253,8 @@ export default function Admin() {
   }
 
   async function saveContent() {
-    setSavingContent(true);
-    setCmsMessage("");
+    setSaving(true);
+    setMessage("");
     setError("");
 
     try {
@@ -236,30 +264,78 @@ export default function Admin() {
         content_type: item.content_type
       }));
 
-      const response = await fetch("/api/admin/content", {
+      await api("/api/admin/content", {
         method: "PUT",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ updates })
       });
 
-      const result = await response.json();
-      if (!response.ok) throw new Error(result?.error || "Could not save site content.");
-
-      setCmsMessage("Saved. The homepage is now using the updated CMS values.");
-      await loadContent(accessToken);
+      setMessage("Site content saved.");
     } catch (err) {
-      setError(err.message || "Could not save site content.");
+      setError(err.message);
     } finally {
-      setSavingContent(false);
+      setSaving(false);
     }
   }
 
-  function updateContentValue(key, value) {
-    setCmsMessage("");
-    setContentValues(prev => ({ ...prev, [key]: value }));
+  async function saveSponsor(e) {
+    e.preventDefault();
+    setSaving(true);
+    setMessage("");
+    setError("");
+
+    try {
+      await api("/api/admin/sponsors", {
+        method: editingSponsorId ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...sponsorDraft,
+          ...(editingSponsorId ? { id: editingSponsorId } : {})
+        })
+      });
+
+      await loadSponsors(accessToken);
+      setSponsorDraft(blankSponsor);
+      setEditingSponsorId("");
+      setMessage(editingSponsorId ? "Sponsor updated." : "Sponsor added.");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function deleteSponsor(id) {
+    if (!window.confirm("Remove this sponsor from the CMS?")) return;
+
+    setError("");
+    setMessage("");
+
+    try {
+      await api("/api/admin/sponsors", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id })
+      });
+
+      await loadSponsors(accessToken);
+      setMessage("Sponsor removed.");
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  function editSponsor(sponsor) {
+    setEditingSponsorId(sponsor.id);
+    setSponsorDraft({
+      name: sponsor.name || "",
+      logo_url: sponsor.logo_url || "",
+      website_url: sponsor.website_url || "",
+      sponsor_tier: sponsor.sponsor_tier || "Sponsor",
+      display_order: sponsor.display_order || 100,
+      active: sponsor.active !== false
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function signOut() {
@@ -268,9 +344,8 @@ export default function Admin() {
     setBallots([]);
     setContentItems([]);
     setContentValues({});
+    setSponsors([]);
     setPassword("");
-    setError("");
-    setCmsMessage("");
   }
 
   if (!accessToken) {
@@ -288,27 +363,12 @@ export default function Admin() {
           <div className="container">
             <form className="adminLoginBox" onSubmit={signIn}>
               <label>Email</label>
-              <input
-                type="email"
-                autoComplete="username"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder="name@hour-media.com"
-              />
-
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)} />
               <label>Password</label>
-              <input
-                type="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                placeholder="Password"
-              />
-
+              <input type="password" value={password} onChange={e => setPassword(e.target.value)} />
               <button className="button" type="submit" disabled={!email || !password || loading}>
                 {loading ? "Signing In..." : "Sign In"}
               </button>
-
               {error ? <div className="adminError">{error}</div> : null}
             </form>
           </div>
@@ -333,39 +393,36 @@ export default function Admin() {
       <section className="section adminWorkspace">
         <div className="container">
           <div className="adminTabs">
-            <button
-              className={activeView === "reporting" ? "adminTab active" : "adminTab"}
-              onClick={() => setActiveView("reporting")}
-            >
-              Reporting
-            </button>
-            <button
-              className={activeView === "content" ? "adminTab active" : "adminTab"}
-              onClick={() => setActiveView("content")}
-            >
-              Site Content
-            </button>
+            {["reporting", "content", "sponsors"].map(view => (
+              <button
+                key={view}
+                className={activeView === view ? "adminTab active" : "adminTab"}
+                onClick={() => {
+                  setActiveView(view);
+                  setMessage("");
+                  setError("");
+                }}
+              >
+                {view === "reporting" ? "Reporting" : view === "content" ? "Site Content" : "Sponsors"}
+              </button>
+            ))}
           </div>
 
           {error ? <div className="adminError adminGlobalError">{error}</div> : null}
+          {message ? <div className="cmsSuccess">{message}</div> : null}
 
-          {activeView === "content" ? (
+          {activeView === "content" && (
             <section className="cmsPanel">
               <div className="cmsIntro">
                 <div>
                   <div className="eyebrow">CMS</div>
                   <h2>Site Content</h2>
-                  <p>
-                    Update campaign copy and dates without changing the website code.
-                    The design and page structure remain protected.
-                  </p>
+                  <p>Update campaign copy and dates without changing website code.</p>
                 </div>
-                <button className="button" onClick={saveContent} disabled={savingContent}>
-                  {savingContent ? "Saving..." : "Save Changes"}
+                <button className="button" onClick={saveContent} disabled={saving}>
+                  {saving ? "Saving..." : "Save Changes"}
                 </button>
               </div>
-
-              {cmsMessage ? <div className="cmsSuccess">{cmsMessage}</div> : null}
 
               <div className="cmsGrid">
                 {contentItems.map(item => (
@@ -375,14 +432,123 @@ export default function Admin() {
                     <ContentField
                       item={item}
                       value={contentValues[item.content_key]}
-                      onChange={updateContentValue}
+                      onChange={(key, value) =>
+                        setContentValues(prev => ({ ...prev, [key]: value }))
+                      }
                     />
-                    <div className="cmsKey">{item.content_key}</div>
                   </div>
                 ))}
               </div>
             </section>
-          ) : (
+          )}
+
+          {activeView === "sponsors" && (
+            <section className="cmsPanel">
+              <div className="cmsIntro">
+                <div>
+                  <div className="eyebrow">CMS</div>
+                  <h2>Sponsors</h2>
+                  <p>Add, remove, reorder, or temporarily hide sponsor logos.</p>
+                </div>
+              </div>
+
+              <form className="sponsorEditor" onSubmit={saveSponsor}>
+                <div className="cmsField">
+                  <label>Sponsor name</label>
+                  <input
+                    value={sponsorDraft.name}
+                    onChange={e => setSponsorDraft({...sponsorDraft, name: e.target.value})}
+                  />
+                </div>
+
+                <div className="cmsField">
+                  <label>Logo URL</label>
+                  <input
+                    type="url"
+                    value={sponsorDraft.logo_url}
+                    onChange={e => setSponsorDraft({...sponsorDraft, logo_url: e.target.value})}
+                  />
+                </div>
+
+                <div className="cmsField">
+                  <label>Website URL</label>
+                  <input
+                    type="url"
+                    value={sponsorDraft.website_url}
+                    onChange={e => setSponsorDraft({...sponsorDraft, website_url: e.target.value})}
+                  />
+                </div>
+
+                <div className="cmsField">
+                  <label>Sponsor tier</label>
+                  <input
+                    value={sponsorDraft.sponsor_tier}
+                    onChange={e => setSponsorDraft({...sponsorDraft, sponsor_tier: e.target.value})}
+                  />
+                </div>
+
+                <div className="cmsField">
+                  <label>Display order</label>
+                  <input
+                    type="number"
+                    value={sponsorDraft.display_order}
+                    onChange={e => setSponsorDraft({...sponsorDraft, display_order: Number(e.target.value)})}
+                  />
+                </div>
+
+                <div className="cmsField sponsorActiveField">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={sponsorDraft.active}
+                      onChange={e => setSponsorDraft({...sponsorDraft, active: e.target.checked})}
+                    />
+                    Show on website
+                  </label>
+                </div>
+
+                <div className="sponsorEditorActions">
+                  <button className="button" type="submit" disabled={saving}>
+                    {editingSponsorId ? "Update Sponsor" : "Add Sponsor"}
+                  </button>
+                  {editingSponsorId && (
+                    <button
+                      type="button"
+                      className="button sponsorSecondaryButton"
+                      onClick={() => {
+                        setEditingSponsorId("");
+                        setSponsorDraft(blankSponsor);
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
+              </form>
+
+              <div className="sponsorAdminList">
+                {sponsors.map(sponsor => (
+                  <article className="sponsorAdminCard" key={sponsor.id}>
+                    <div className="sponsorAdminLogo">
+                      <img src={sponsor.logo_url} alt={sponsor.name} />
+                    </div>
+                    <div className="sponsorAdminInfo">
+                      <strong>{sponsor.name}</strong>
+                      <span>{sponsor.sponsor_tier}</span>
+                      <span>Order {sponsor.display_order}</span>
+                      <span>{sponsor.active ? "Visible" : "Hidden"}</span>
+                    </div>
+                    <div className="sponsorAdminActions">
+                      <button onClick={() => editSponsor(sponsor)}>Edit</button>
+                      <button onClick={() => deleteSponsor(sponsor.id)}>Remove</button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {activeView === "reporting" && (
             <>
               <div className="adminMetrics">
                 <div className="adminMetricCard">
@@ -426,9 +592,9 @@ export default function Admin() {
                     </thead>
                     <tbody>
                       {companies.map(company => {
-                        const sortedCategories = Object.entries(company.category_percentages)
+                        const sorted = Object.entries(company.category_percentages)
                           .sort((a, b) => b[1] - a[1]);
-                        const topCategory = sortedCategories[0];
+                        const topCategory = sorted[0];
 
                         return (
                           <tr key={company.company_name}>
@@ -442,6 +608,42 @@ export default function Admin() {
                           </tr>
                         );
                       })}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+
+              <section className="adminSection">
+                <h2>Ballot Detail</h2>
+                <div className="adminTableWrap">
+                  <table className="adminTable">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Company</th>
+                        <th>Employee</th>
+                        <th>Email</th>
+                        <th>Industry</th>
+                        <th>Size</th>
+                        <th>Culture Score</th>
+                        <th>Verification</th>
+                        <th>Review</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ballots.map(ballot => (
+                        <tr key={ballot.id}>
+                          <td>{ballot.submitted_at ? new Date(ballot.submitted_at).toLocaleString() : ""}</td>
+                          <td>{ballot.company_name}</td>
+                          <td>{ballot.employee_name}</td>
+                          <td>{ballot.work_email}</td>
+                          <td>{ballot.industry}</td>
+                          <td>{ballot.company_size}</td>
+                          <td>{ballot.culture_score}</td>
+                          <td>{ballot.verification_status}</td>
+                          <td>{ballot.review_status}</td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>
