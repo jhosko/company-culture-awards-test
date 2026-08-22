@@ -26,17 +26,8 @@ export default async function handler(req, res) {
     return res.status(401).json({ ok: false, error: "Your session is invalid or expired." });
   }
 
-  const user = await userResponse.json();
-
-  const fields = [
-    "id","company_name","industry","company_size","employee_name","work_email",
-    "top_category","second_category","third_category","culture_score","employee_comment",
-    "employee_confirmation","verification_status","verified_at","review_status",
-    "review_notes","submitted_at","ip_hash","user_agent"
-  ].join(",");
-
   const response = await fetch(
-    `${supabaseUrl}/rest/v1/ballots?select=${fields}&order=submitted_at.desc`,
+    `${supabaseUrl}/rest/v1/newsletter_signups?select=employee_name,work_email,hour_today,a_list,hour_exclusives,dbusiness_daily,submitted_at&order=submitted_at.desc`,
     {
       headers: {
         apikey: serviceRoleKey,
@@ -45,15 +36,14 @@ export default async function handler(req, res) {
     }
   );
 
-  const ballots = await response.json();
+  const signups = await response.json();
 
   if (!response.ok) {
-    return res.status(500).json({ ok: false, error: "Could not load reporting data." });
+    return res.status(500).json({
+      ok: false,
+      error: "Could not load newsletter signups."
+    });
   }
 
-  return res.status(200).json({
-    ok: true,
-    admin: { email: user.email },
-    ballots
-  });
+  return res.status(200).json({ ok: true, signups });
 }
