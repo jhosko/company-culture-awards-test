@@ -34,18 +34,38 @@ export default async function handler(req, res) {
 
   try {
     const {
-      company_name, industry, company_size, employee_name, work_email,
-      top_category, second_category, third_category, culture_score,
-      employee_comment, employee_confirmation
+      company_name,
+      industry,
+      company_size,
+      employee_name,
+      work_email,
+      top_category,
+      second_category,
+      third_category,
+      culture_score,
+      employee_comment,
+      employee_confirmation,
+      newsletter_hour_today,
+      newsletter_a_list,
+      newsletter_hour_exclusives,
+      newsletter_dbusiness_daily
     } = req.body || {};
 
     const email = normalizeEmail(work_email);
 
     if (
-      !clean(company_name) || !clean(industry) || !clean(company_size) ||
-      !clean(employee_name) || !email || !clean(top_category) || !clean(employee_comment)
+      !clean(company_name) ||
+      !clean(industry) ||
+      !clean(company_size) ||
+      !clean(employee_name) ||
+      !email ||
+      !clean(top_category) ||
+      !clean(employee_comment)
     ) {
-      return res.status(400).json({ ok: false, error: "Please complete all required fields." });
+      return res.status(400).json({
+        ok: false,
+        error: "Please complete all required fields."
+      });
     }
 
     if (employee_confirmation !== true) {
@@ -56,7 +76,10 @@ export default async function handler(req, res) {
     }
 
     if (!validEmail(email)) {
-      return res.status(400).json({ ok: false, error: "Please enter a valid work email address." });
+      return res.status(400).json({
+        ok: false,
+        error: "Please enter a valid work email address."
+      });
     }
 
     const [prefix, domain] = email.split("@");
@@ -76,8 +99,12 @@ export default async function handler(req, res) {
     }
 
     const score = Number(culture_score);
+
     if (!Number.isInteger(score) || score < 1 || score > 100) {
-      return res.status(400).json({ ok: false, error: "Culture score must be between 1 and 100." });
+      return res.status(400).json({
+        ok: false,
+        error: "Culture score must be between 1 and 100."
+      });
     }
 
     const selectedCategories = [
@@ -87,7 +114,10 @@ export default async function handler(req, res) {
     ].filter(Boolean);
 
     if (new Set(selectedCategories).size !== selectedCategories.length) {
-      return res.status(400).json({ ok: false, error: "Please select different culture categories." });
+      return res.status(400).json({
+        ok: false,
+        error: "Please select different culture categories."
+      });
     }
 
     const allowedCompanySizes = new Set([
@@ -97,29 +127,33 @@ export default async function handler(req, res) {
     ]);
 
     if (!allowedCompanySizes.has(clean(company_size))) {
-      return res.status(400).json({ ok: false, error: "Please select a valid company size." });
+      return res.status(400).json({
+        ok: false,
+        error: "Please select a valid company size."
+      });
     }
 
     const forwardedFor = req.headers["x-forwarded-for"];
-    const ip = typeof forwardedFor === "string"
-      ? forwardedFor.split(",")[0].trim()
-      : req.socket?.remoteAddress || "";
+    const ip =
+      typeof forwardedFor === "string"
+        ? forwardedFor.split(",")[0].trim()
+        : req.socket?.remoteAddress || "";
 
     const ipHash = ip ? hashValue(ip) : null;
+
     const supabaseUrl = process.env.SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!supabaseUrl || !serviceRoleKey) {
-      console.error("Supabase environment variables are missing.");
-      return res.status(500).json({ ok: false, error: "The ballot service is temporarily unavailable." });
+      return res.status(500).json({
+        ok: false,
+        error: "The ballot service is temporarily unavailable."
+      });
     }
 
-    // PROOF OF CONCEPT ONLY:
-    // Email click verification is intentionally skipped for now.
-    // Successful submissions are marked verified immediately so reporting works.
     const now = new Date().toISOString();
 
-    const response = await fetch(`${supabaseUrl}/rest/v1/ballots`, {
+    const ballotResponse = await fetch(`${supabaseUrl}/rest/v1/ballots`, {
       method: "POST",
       headers: {
         apikey: serviceRoleKey,
@@ -149,15 +183,15 @@ export default async function handler(req, res) {
       })
     });
 
-    let result = null;
+    let ballotResult = null;
     try {
-      result = await response.json();
+      ballotResult = await ballotResponse.json();
     } catch {}
 
-    if (!response.ok) {
-      console.error("Supabase ballot insert failed:", result);
+    if (!ballotResponse.ok) {
+      console.error("Supabase ballot insert failed:", ballotResult);
 
-      if (response.status === 409 || result?.code === "23505") {
+      if (ballotResponse.status === 409 || ballotResult?.code === "23505") {
         return res.status(409).json({
           ok: false,
           error: "A ballot has already been submitted using this work email address."
@@ -170,9 +204,54 @@ export default async function handler(req, res) {
       });
     }
 
-    return res.status(201).json({ ok: true, message: "Your ballot has been received." });
+    const ballotId = ballotResult?.[0]?.id || null;
+
+    const wantsAnyNewsletter =
+      newsletter_hour_today === true ||
+      newsletter_a_list === true ||
+      newsletter_hour_exclusives === true ||
+      newsletter_dbusiness_daily === true;
+
+    if (wantsAnyNewsletter) {
+      const newsletterResponse = await fetch(
+        `${supabaseUrl}/rest/v1/newsletter_signups`,
+        {
+          method: "POST",
+          headers: {
+            apikey: serviceRoleKey,
+            Authorization: `Bearer ${serviceRoleKey}`,
+            "Content-Type": "application/json",
+            Prefer: "resolution=merge-duplicates,return=minimal"
+          },
+          body: JSON.stringify({
+            ballot_id: ballotId,
+            employee_name: clean(employee_name),
+            work_email: email,
+            hour_today: newsletter_hour_today === true,
+            a_list: newsletter_a_list === true,
+            hour_exclusives: newsletter_hour_exclusives === true,
+            dbusiness_daily: newsletter_dbusiness_daily === true,
+            submitted_at: now
+          })
+        }
+      );
+
+      if (!newsletterResponse.ok) {
+        const newsletterError = await newsletterResponse.text();
+        console.error("Newsletter signup insert failed:", newsletterError);
+      }
+    }
+
+    return res.status(201).json({
+      ok: true,
+      message: "Your ballot has been received."
+    });
   } catch (error) {
     console.error("Ballot submission error:", error);
-    return res.status(500).json({ ok: false, error: "Something went wrong. Please try again." });
+
+    return res.status(500).json({
+      ok: false,
+      error: "Something went wrong. Please try again."
+    });
   }
 }
