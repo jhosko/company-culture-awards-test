@@ -127,3 +127,84 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Front end branding refinement */
+.dbusinessLogoLink {
+  display: inline-flex;
+  align-items: center;
+  margin-right: auto;
+}
+
+.dbusinessHeaderLogo {
+  display: block;
+  width: 210px;
+  max-height: 52px;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.dbusinessFooterLogo {
+  display: block;
+  width: 190px;
+  max-height: 50px;
+  object-fit: contain;
+  object-position: left center;
+  filter: brightness(0) invert(1);
+  margin-bottom: 10px;
+}
+
+.footerLogoLink {
+  display: inline-block;
+}
+
+.heroRefined {
+  position: relative;
+}
+
+.heroRefined .heroGrid {
+  grid-template-columns: minmax(0, 1.06fr) minmax(380px, .94fr);
+  gap: 72px;
+}
+
+.heroAwardVisual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 480px;
+  padding: 28px;
+  background: #f1f2f4;
+  border-top: 8px solid var(--gold);
+  border-bottom: 8px solid var(--navy);
+}
+
+.heroAwardImage {
+  width: 100%;
+  max-width: 470px;
+  height: auto;
+  display: block;
+  object-fit: contain;
+}
+
+@media (max-width: 900px) {
+  .dbusinessHeaderLogo {
+    width: 180px;
+  }
+
+  .heroRefined .heroGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .heroAwardVisual {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 650px) {
+  .dbusinessHeaderLogo {
+    width: 155px;
+  }
+
+  .heroAwardVisual {
+    padding: 18px;
+  }
+}
