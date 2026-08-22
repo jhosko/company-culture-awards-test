@@ -5,7 +5,7 @@ import { categories } from "../lib/data";
 export default function Home() {
   return (
     <Layout>
-      <section className="hero">
+      <section className="hero heroRefined">
         <div className="container heroGrid">
           <div className="heroCopy">
             <div className="eyebrow">DBusiness Company Culture Awards</div>
@@ -26,15 +26,12 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="brandPanel">
-            <div className="miniMasthead">DBusiness</div>
-            <div className="miniTag">Detroit's Premier Business Journal</div>
-            <div className="brandRule">
-              <span></span><b>★</b><span></span>
-            </div>
-            <div className="companyWord">COMPANY</div>
-            <div className="cultureWord">CULTURE</div>
-            <div className="awardsWord">AWARDS</div>
+          <div className="heroAwardVisual">
+            <img
+              src="/company-culture-awards-breakfast.jpg"
+              alt="DBusiness Breakfast Series Company Culture Awards"
+              className="heroAwardImage"
+            />
           </div>
         </div>
       </section>
