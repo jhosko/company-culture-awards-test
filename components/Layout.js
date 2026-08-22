@@ -16,10 +16,19 @@ export default function Layout({ children }) {
     <>
       <header className="siteHeader">
         <div className="container headerInner">
-          <Link href="/" className="brand">
-            <span className="dbusiness">DBusiness</span>
-            <span className="brandTitle">Company Culture Awards</span>
-          </Link>
+          <a
+            href={links.dbusiness}
+            target="_blank"
+            rel="noreferrer"
+            className="dbusinessLogoLink"
+            aria-label="Visit DBusiness.com"
+          >
+            <img
+              src="/dbusiness-logo.png"
+              alt="DBusiness"
+              className="dbusinessHeaderLogo"
+            />
+          </a>
 
           <nav className="nav">
             {nav.map(([href, label]) => (
@@ -47,7 +56,13 @@ export default function Layout({ children }) {
       <footer className="footer">
         <div className="container footerGrid">
           <div>
-            <div className="dbusiness footerBrand">DBusiness</div>
+            <a href={links.dbusiness} target="_blank" rel="noreferrer" className="footerLogoLink">
+              <img
+                src="/dbusiness-logo.png"
+                alt="DBusiness"
+                className="dbusinessFooterLogo"
+              />
+            </a>
             <div className="footerTitle">Company Culture Awards</div>
             <p className="footerCopy">
               Recognizing standout workplace cultures across Metro Detroit.
