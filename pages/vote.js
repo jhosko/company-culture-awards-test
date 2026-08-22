@@ -3,8 +3,18 @@ import Layout from "../components/Layout";
 import { categories, industries, companySizes } from "../lib/data";
 
 const initial = {
-  company: "", industry: "", size: "", name: "", email: "",
-  score: 85, comment: "", agree: false
+  company: "",
+  industry: "",
+  size: "",
+  name: "",
+  email: "",
+  score: 85,
+  comment: "",
+  agree: false,
+  newsletterHourToday: true,
+  newsletterAList: true,
+  newsletterHourExclusives: true,
+  newsletterDBusinessDaily: true
 };
 
 export default function Vote() {
@@ -29,8 +39,15 @@ export default function Vote() {
   }, [form, selections]);
 
   const canSubmit =
-    form.company && form.industry && form.size && form.name && form.email &&
-    selections.length && form.comment.trim() && form.agree && !submitting;
+    form.company &&
+    form.industry &&
+    form.size &&
+    form.name &&
+    form.email &&
+    selections.length &&
+    form.comment.trim() &&
+    form.agree &&
+    !submitting;
 
   const update = (key, value) => {
     setSubmitError("");
@@ -70,7 +87,11 @@ export default function Vote() {
           third_category: selections[2] || "",
           culture_score: form.score,
           employee_comment: form.comment,
-          employee_confirmation: form.agree
+          employee_confirmation: form.agree,
+          newsletter_hour_today: form.newsletterHourToday,
+          newsletter_a_list: form.newsletterAList,
+          newsletter_hour_exclusives: form.newsletterHourExclusives,
+          newsletter_dbusiness_daily: form.newsletterDBusinessDaily
         })
       });
 
@@ -83,8 +104,7 @@ export default function Vote() {
 
       setSubmitted(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
-    } catch (error) {
-      console.error("Ballot submit error:", error);
+    } catch {
       setSubmitError("We could not submit your ballot. Please try again.");
     } finally {
       setSubmitting(false);
@@ -104,17 +124,7 @@ export default function Vote() {
                 Thanks for helping DBusiness recognize the companies building great
                 workplace cultures across Metro Detroit.
               </p>
-              <button
-                className="button"
-                onClick={() => {
-                  setSubmitted(false);
-                  setForm(initial);
-                  setSelections([]);
-                  setSubmitError("");
-                }}
-              >
-                Submit Another Vote
-              </button>
+              <p>We will share the results after voting closes.</p>
             </div>
           </div>
         </section>
@@ -140,7 +150,8 @@ export default function Vote() {
           <form className="ballot" onSubmit={submit}>
             <div className="progressWrap">
               <div className="progressMeta">
-                <span>Ballot progress</span><strong>{complete}%</strong>
+                <span>Ballot progress</span>
+                <strong>{complete}%</strong>
               </div>
               <div className="progressTrack">
                 <div className="progressBar" style={{ width: `${complete}%` }} />
@@ -170,7 +181,10 @@ export default function Vote() {
 
               <div className="field">
                 <label>Industry</label>
-                <select value={form.industry} onChange={e => update("industry", e.target.value)}>
+                <select
+                  value={form.industry}
+                  onChange={e => update("industry", e.target.value)}
+                >
                   <option value="">Select industry</option>
                   {industries.map(x => <option key={x}>{x}</option>)}
                 </select>
@@ -178,7 +192,10 @@ export default function Vote() {
 
               <div className="field">
                 <label>Company size</label>
-                <select value={form.size} onChange={e => update("size", e.target.value)}>
+                <select
+                  value={form.size}
+                  onChange={e => update("size", e.target.value)}
+                >
                   <option value="">Select company size</option>
                   {companySizes.map(x => <option key={x}>{x}</option>)}
                 </select>
@@ -267,7 +284,10 @@ export default function Vote() {
                   onChange={e => update("score", Number(e.target.value))}
                 />
 
-                <div className="scoreScale"><span>1</span><span>100</span></div>
+                <div className="scoreScale">
+                  <span>1</span>
+                  <span>100</span>
+                </div>
               </div>
 
               <div className="field full">
@@ -278,11 +298,35 @@ export default function Vote() {
                   placeholder="Tell us what makes your workplace special."
                   rows="6"
                 />
-                <small>
-                  Your response may be used in DBusiness coverage of the Company Culture Awards.
-                </small>
               </div>
             </BallotSection>
+
+            <section className="newsletterBox">
+              <div className="eyebrow">Stay connected</div>
+              <h2>Get more from Hour Media.</h2>
+              <p className="newsletterIntro">
+                These subscriptions are optional. Uncheck any you do not want.
+              </p>
+
+              {[
+                ["newsletterHourToday", "Hour Today", "Get daily local news, recipes, dining info, and more."],
+                ["newsletterAList", "A List", "Get special invites and promotions for Hour Detroit events."],
+                ["newsletterHourExclusives", "Hour Exclusives", "Get special offers and promotions from our partners."],
+                ["newsletterDBusinessDaily", "DBusiness Daily News", "Your guide to metro Detroit business news."]
+              ].map(([key, title, copy]) => (
+                <label className="newsletterOption" key={key}>
+                  <input
+                    type="checkbox"
+                    checked={form[key]}
+                    onChange={e => update(key, e.target.checked)}
+                  />
+                  <span>
+                    <strong>{title}</strong>
+                    <small>{copy}</small>
+                  </span>
+                </label>
+              ))}
+            </section>
 
             <div className="confirmationBox">
               <label className="checkLabel">
@@ -296,7 +340,6 @@ export default function Vote() {
                   I provided is accurate.
                 </span>
               </label>
-              <p>Submissions are subject to review to help protect the integrity of the awards.</p>
             </div>
 
             <button
@@ -307,22 +350,6 @@ export default function Vote() {
               {submitting ? "Submitting..." : "Submit My Vote"}
             </button>
           </form>
-
-          <aside className="ballotAside">
-            <div className="asideCard navyCard">
-              <div className="eyebrow gold">Voting closes</div>
-              <div className="bigDate">NOV 10</div>
-              <p>Make your voice count before voting closes.</p>
-            </div>
-
-            <div className="asideCard">
-              <h3>What happens next?</h3>
-              <p>
-                DBusiness reviews submissions and recognizes standout companies across
-                award categories, industries, and company sizes.
-              </p>
-            </div>
-          </aside>
         </div>
       </section>
     </Layout>
