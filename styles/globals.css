@@ -336,3 +336,174 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Sponsor strip */
+.sponsorStrip {
+  background: #fff;
+  border-top: 1px solid #e0ddd6;
+  border-bottom: 1px solid #e0ddd6;
+  padding: 28px 0 32px;
+}
+
+.sponsorStripHeading {
+  text-align: center;
+  color: #6d6d6d;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  margin-bottom: 24px;
+}
+
+.sponsorLogoRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px 30px;
+  flex-wrap: wrap;
+}
+
+.sponsorLogoItem {
+  width: 150px;
+  height: 72px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+}
+
+.sponsorLogoItem img {
+  display: block;
+  max-width: 100%;
+  max-height: 58px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  filter: grayscale(100%);
+  opacity: .82;
+  transition: .2s ease;
+}
+
+a.sponsorLogoItem:hover img {
+  filter: grayscale(0%);
+  opacity: 1;
+  transform: scale(1.035);
+}
+
+/* Sponsor CMS */
+.sponsorEditor {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding-bottom: 30px;
+  border-bottom: 1px solid #e5e0d8;
+  margin-bottom: 30px;
+}
+
+.sponsorActiveField label {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.sponsorActiveField input {
+  width: auto;
+}
+
+.sponsorEditorActions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 10px;
+}
+
+.sponsorSecondaryButton {
+  background: #666;
+}
+
+.sponsorAdminList {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.sponsorAdminCard {
+  display: grid;
+  grid-template-columns: 130px 1fr auto;
+  gap: 16px;
+  align-items: center;
+  border: 1px solid #ddd8cf;
+  background: #fff;
+  padding: 14px;
+}
+
+.sponsorAdminLogo {
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sponsorAdminLogo img {
+  max-width: 100%;
+  max-height: 58px;
+  object-fit: contain;
+}
+
+.sponsorAdminInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sponsorAdminInfo span {
+  color: #777;
+  font-size: 12px;
+}
+
+.sponsorAdminActions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sponsorAdminActions button {
+  border: 1px solid #bbb;
+  background: #fff;
+  padding: 7px 9px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .sponsorLogoItem {
+    width: 132px;
+  }
+
+  .sponsorAdminList {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 650px) {
+  .sponsorLogoRow {
+    gap: 14px;
+  }
+
+  .sponsorLogoItem {
+    width: calc(50% - 8px);
+  }
+
+  .sponsorEditor {
+    grid-template-columns: 1fr;
+  }
+
+  .sponsorAdminCard {
+    grid-template-columns: 100px 1fr;
+  }
+
+  .sponsorAdminActions {
+    grid-column: 1 / -1;
+    flex-direction: row;
+  }
+}
