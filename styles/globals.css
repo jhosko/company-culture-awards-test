@@ -673,3 +673,50 @@ a.sponsorLogoItem:hover img {
     flex-direction: column;
   }
 }
+
+.newsletterBox {
+  background: #f6f4f0;
+  border: 1px solid #ddd7ce;
+  padding: 26px;
+}
+
+.newsletterBox h2 {
+  margin: 6px 0 8px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 30px;
+}
+
+.newsletterIntro {
+  margin: 0 0 18px;
+  color: #666;
+}
+
+.newsletterOption {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 0;
+  border-top: 1px solid #ddd7ce;
+  cursor: pointer;
+}
+
+.newsletterOption:first-of-type {
+  border-top: 0;
+}
+
+.newsletterOption input {
+  margin-top: 4px;
+  width: 18px;
+  height: 18px;
+}
+
+.newsletterOption span {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.newsletterOption small {
+  color: #666;
+  line-height: 1.45;
+}
