@@ -2,18 +2,33 @@ import Link from "next/link";
 import Layout from "../components/Layout";
 import { categories } from "../lib/data";
 
-export default function Home() {
+function formatDate(dateString) {
+  if (!dateString) return "";
+  const date = new Date(`${dateString}T12:00:00`);
+  return date.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric"
+  });
+}
+
+export default function Home({ cms }) {
+  const headline = cms.homepage_headline || "Do you love where you work?";
+  const intro =
+    cms.homepage_intro ||
+    "Tell us what makes your company a great place to work and help it earn recognition in the DBusiness Company Culture Awards.";
+
+  const votingOpen = formatDate(cms.voting_open_date || "2026-10-01");
+  const votingClose = formatDate(cms.voting_close_date || "2026-11-10");
+
   return (
     <Layout>
       <section className="hero heroRefined">
         <div className="container heroGrid">
           <div className="heroCopy">
             <div className="eyebrow">DBusiness Company Culture Awards</div>
-            <h1>Do you love where you work?</h1>
-            <p className="heroLead">
-              Tell us what makes your company a great place to work and help it earn
-              recognition in the DBusiness Company Culture Awards.
-            </p>
+            <h1>{headline}</h1>
+            <p className="heroLead">{intro}</p>
 
             <div className="heroActions">
               <Link href="/vote" className="button buttonLarge">Vote Now</Link>
@@ -22,7 +37,7 @@ export default function Home() {
 
             <div className="deadlineStrip">
               <span className="deadlineLabel">Voting</span>
-              <span>October 1 through November 10, 2026</span>
+              <span>{votingOpen} through {votingClose}</span>
             </div>
           </div>
 
@@ -90,20 +105,50 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      <section className="section">
-        <div className="container recognitionCallout">
-          <div>
-            <div className="eyebrow">Recognition that travels</div>
-            <h2>Featured in print, online, and celebrated live.</h2>
-            <p>
-              Award recipients will be featured in DBusiness magazine, recognized on
-              DBusiness.com, and celebrated at the DBusiness Company Culture Awards Breakfast.
-            </p>
-          </div>
-          <Link href="/about" className="button buttonNavy">Learn More</Link>
-        </div>
-      </section>
     </Layout>
   );
+}
+
+export async function getServerSideProps() {
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  const fallback = {
+    homepage_headline: "Do you love where you work?",
+    homepage_intro:
+      "Tell us what makes your company a great place to work and help it earn recognition in the DBusiness Company Culture Awards.",
+    voting_open_date: "2026-10-01",
+    voting_close_date: "2026-11-10"
+  };
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    return { props: { cms: fallback } };
+  }
+
+  try {
+    const response = await fetch(
+      `${supabaseUrl}/rest/v1/site_content?select=content_key,content_value`,
+      {
+        headers: {
+          apikey: serviceRoleKey,
+          Authorization: `Bearer ${serviceRoleKey}`
+        }
+      }
+    );
+
+    const rows = await response.json();
+
+    if (!response.ok || !Array.isArray(rows)) {
+      return { props: { cms: fallback } };
+    }
+
+    const cms = { ...fallback };
+    rows.forEach(row => {
+      if (row?.content_key) cms[row.content_key] = row.content_value || "";
+    });
+
+    return { props: { cms } };
+  } catch {
+    return { props: { cms: fallback } };
+  }
 }
